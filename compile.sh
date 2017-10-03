@@ -1,10 +1,14 @@
 #!/bin/bash    
 
 LORA_GATEWAY_DRIVER_PATH=../lora_gateway
+IEEE1888_PATH=../IEEE1888
 
-TARGET_IP_ADDRESS=192.168.0.1
-TARGET_PATH=/home/pi/lora-net
-TARGET_USER=pi
+#TARGET_IP_ADDRESS=192.168.0.1
+#TARGET_PATH=/home/pi/lora-net
+#TARGET_USER=pi
+TARGET_IP_ADDRESS=localhost
+TARGET_PATH=/home/debian/lora-net
+TARGET_USER=debian
 
 clean_all() {
     make clean -C $LORA_GATEWAY_DRIVER_PATH
@@ -13,6 +17,15 @@ clean_all() {
         echo "ERROR: Failed to clean $LORA_GATEWAY_DRIVER_PATH"
         exit 1
     fi
+
+    make clean -C $IEEE1888_PATH
+    if [ $? != 0 ]
+    then
+        echo "ERROR: Failed to clean $IEEE1888_PATH"
+        exit 1
+
+    fi
+
     make clean
     if [ $? != 0 ]
     then
@@ -27,6 +40,14 @@ build_all() {
         echo "ERROR: Failed to compile $LORA_GATEWAY_DRIVER_PATH"
         exit 1
     fi
+
+    make all -C $IEEE1888_PATH
+    if [ $? != 0 ]
+    then
+        echo "ERROR: Failed to compile $IEEE1888_PATH"
+        exit 1
+
+
     make all
     if [ $? != 0 ]
     then

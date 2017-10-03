@@ -5,6 +5,10 @@ APP_NAME := lora_pkt_fwd
 ### Environment constants 
 
 LGW_PATH ?= ../../lora_gateway/libloragw
+
+IEEE1888_PATH ?= ../../IEEE1888
+IEEE1888_OBJS ?= $(IEEE1888_PATH)/ieee1888_XMLgenerator.o $(IEEE1888_PATH)/ieee1888_XMLparser.o $(IEEE1888_PATH)/ieee1888_client.o $(IEEE1888_PATH)/ieee1888_object_factory.o $(IEEE1888_PATH)/ieee1888_server.o $(IEEE1888_PATH)/ieee1888_util.o
+
 ARCH ?=
 CROSS_COMPILE ?=
 
@@ -54,14 +58,14 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 $(OBJDIR)/%.o: src/%.c $(INCLUDES) | $(OBJDIR)
-	$(CC) -c $(CFLAGS) -I$(LGW_PATH)/inc $< -o $@
+	$(CC) -c $(CFLAGS) -I$(LGW_PATH)/inc -I$(IEEE1888_PATH) $< -o $@
 
 ### Main program compilation and assembly
 
 $(OBJDIR)/$(APP_NAME).o: src/$(APP_NAME).c $(LGW_INC) $(INCLUDES) | $(OBJDIR)
-	$(CC) -c $(CFLAGS) $(VFLAG) -I$(LGW_PATH)/inc $< -o $@
+	$(CC) -c $(CFLAGS) $(VFLAG) -I$(LGW_PATH)/inc -I$(IEEE1888_PATH) $< -o $@
 
-$(APP_NAME): $(OBJDIR)/$(APP_NAME).o $(LGW_PATH)/libloragw.a $(OBJDIR)/parson.o $(OBJDIR)/base64.o $(OBJDIR)/jitqueue.o $(OBJDIR)/timersync.o
-	$(CC) -L$(LGW_PATH) $< $(OBJDIR)/parson.o $(OBJDIR)/base64.o $(OBJDIR)/jitqueue.o $(OBJDIR)/timersync.o -o $@ $(LIBS)
+$(APP_NAME): $(OBJDIR)/$(APP_NAME).o $(LGW_PATH)/libloragw.a $(OBJDIR)/parson.o $(OBJDIR)/base64.o $(OBJDIR)/jitqueue.o $(OBJDIR)/timersync.o $(OBJDIR)/ieee1888_client.o $(IEEE1888_OBJS) 
+	$(CC) -L$(LGW_PATH) $< $(OBJDIR)/parson.o $(OBJDIR)/base64.o $(OBJDIR)/jitqueue.o $(OBJDIR)/timersync.o $(OBJDIR)/ieee1888_client.o $(IEEE1888_OBJS) -o $@ $(LIBS)
 
 ### EOF
