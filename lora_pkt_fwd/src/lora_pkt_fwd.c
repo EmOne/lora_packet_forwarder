@@ -57,6 +57,8 @@ Maintainer: Michael Coracin
 #include "loragw_aux.h"
 #include "loragw_reg.h"
 
+#include "ieee1888_client.h"
+
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE MACROS ------------------------------------------------------- */
 
@@ -107,10 +109,10 @@ Maintainer: Michael Coracin
 #define UNIX_GPS_EPOCH_OFFSET 315964800 /* Number of seconds ellapsed between 01.Jan.1970 00:00:00
                                                                           and 06.Jan.1980 00:00:00 */
 
-#define DEFAULT_BEACON_FREQ_HZ      869525000
+#define DEFAULT_BEACON_FREQ_HZ      923200000
 #define DEFAULT_BEACON_FREQ_NB      1
 #define DEFAULT_BEACON_FREQ_STEP    0
-#define DEFAULT_BEACON_DATARATE     9
+#define DEFAULT_BEACON_DATARATE     2
 #define DEFAULT_BEACON_BW_HZ        125000
 #define DEFAULT_BEACON_POWER        14
 #define DEFAULT_BEACON_INFODESC     0
