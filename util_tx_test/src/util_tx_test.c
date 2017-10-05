@@ -115,8 +115,8 @@ int main(int argc, char **argv)
 
     /* application parameters */
     char mod[64] = "LORA"; /* LoRa modulation by default */
-    float f_target = 866.0; /* target frequency */
-    int sf = 10; /* SF10 by default */
+    float f_target = 923.2; /* target frequency */
+    int sf = 7; /* SF10 by default */
     int bw = 125; /* 125kHz bandwidth by default */
     int pow = 14; /* 14 dBm by default */
     int delay = 1000; /* 1 second between packets by default */

@@ -57,7 +57,7 @@ Maintainer: Michael Coracin
 #include "loragw_aux.h"
 #include "loragw_reg.h"
 
-#include "ieee1888_client.h"
+#include "ieee1888_parser.h"
 
 /* -------------------------------------------------------------------------- */
 /* --- PRIVATE MACROS ------------------------------------------------------- */
@@ -72,6 +72,9 @@ Maintainer: Michael Coracin
 #ifndef VERSION_STRING
   #define VERSION_STRING "undefined"
 #endif
+
+#define DEFAULT_COUNTRY      "th"	/* hostname country */
+#define DEFAULT_CITY     "bkk"		/* hostname city */
 
 #define DEFAULT_SERVER      127.0.0.1   /* hostname also supported */
 #define DEFAULT_PORT_UP     1780
@@ -109,10 +112,10 @@ Maintainer: Michael Coracin
 #define UNIX_GPS_EPOCH_OFFSET 315964800 /* Number of seconds ellapsed between 01.Jan.1970 00:00:00
                                                                           and 06.Jan.1980 00:00:00 */
 
-#define DEFAULT_BEACON_FREQ_HZ      923200000
+#define DEFAULT_BEACON_FREQ_HZ      923400000
 #define DEFAULT_BEACON_FREQ_NB      1
 #define DEFAULT_BEACON_FREQ_STEP    0
-#define DEFAULT_BEACON_DATARATE     2
+#define DEFAULT_BEACON_DATARATE     9	//AS923: DR3 SF9/125kHz
 #define DEFAULT_BEACON_BW_HZ        125000
 #define DEFAULT_BEACON_POWER        14
 #define DEFAULT_BEACON_INFODESC     0
@@ -128,6 +131,14 @@ volatile bool quit_sig = false; /* 1 -> application terminates without shutting 
 static bool fwd_valid_pkt = true; /* packets with PAYLOAD CRC OK are forwarded */
 static bool fwd_error_pkt = false; /* packets with PAYLOAD CRC ERROR are NOT forwarded */
 static bool fwd_nocrc_pkt = false; /* packets with NO PAYLOAD CRC are NOT forwarded */
+static bool fwd_ieee1888_pkt = false; /* packets are IEEE1888 forwarded */
+
+static gateway_packet_t gw_pkt;
+//static struct panel_t panel;
+//static struct site_t site;
+
+static char country_str[4] = DEFAULT_COUNTRY; /* address of the server (host name or IPv4/IPv6) */
+static char city_str[8] = DEFAULT_CITY; /* server port for upstream traffic */
 
 /* network configuration variables */
 static uint64_t lgwm = 0; /* Lora gateway MAC address */
@@ -689,8 +700,24 @@ static int parse_gateway_configuration(const char * conf_file) {
     if (str != NULL) {
         sscanf(str, "%llx", &ull);
         lgwm = ull;
+        gw_pkt.NETWORK_ID = ull;
         MSG("INFO: gateway MAC address is configured to %016llX\n", ull);
     }
+
+	/* Country */
+	str = json_object_get_string(conf_obj, "country");
+	if (str != NULL) {
+		strncpy(country_str, str, sizeof country_str);
+		MSG("INFO: server hostname country is configured to \"%s\"\n",
+				country_str);
+	}
+	/* City */
+	str = json_object_get_string(conf_obj, "city");
+	if (str != NULL) {
+		strncpy(city_str, str, sizeof country_str);
+		MSG("INFO: server hostname city is configured to \"%s\"\n",
+				city_str);
+	}
 
     /* server hostname or IP address (optional) */
     str = json_object_get_string(conf_obj, "server_address");
@@ -748,6 +775,12 @@ static int parse_gateway_configuration(const char * conf_file) {
         fwd_nocrc_pkt = (bool)json_value_get_boolean(val);
     }
     MSG("INFO: packets received with no CRC will%s be forwarded\n", (fwd_nocrc_pkt ? "" : " NOT"));
+    val = json_object_get_value(conf_obj, "forward_ieee1888");
+	if (json_value_get_type(val) == JSONBoolean) {
+		fwd_ieee1888_pkt = (bool) json_value_get_boolean(val);
+	}
+	MSG("INFO: packets received will%s be IEEE1888 forwarded\n",
+			(fwd_ieee1888_pkt ? "" : " NOT"));
 
     /* GPS module TTY path (optional) */
     str = json_object_get_string(conf_obj, "gps_tty_path");

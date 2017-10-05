@@ -23,7 +23,7 @@
  */
 
 /*
- * ieee1888_client.c
+ * ieee1888_parser.c
  *
  *  Created on: Oct 3, 2017
  *      Author: anolp
@@ -36,13 +36,13 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "ieee1888_parser.h"
 #include "ieee1888.h"
-#include "ieee1888_client.h"
 
 #define MAX_POINT_ID_LEN 1024
 #define MAX_CONTENT_LEN 65536
 #define MAX_TIME_LEN 32
-#define POINT_COUNT 4
+#define POINT_COUNT 26
 
 struct point_value {
   char point_id[MAX_POINT_ID_LEN];
@@ -56,18 +56,129 @@ struct point_value m_buffer[POINT_COUNT];
 char m_IEEE1888_FROM[]="http://fiap-sandbox.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
 char m_IEEE1888_TO[]="http://fiap-dev.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
 
-void ieee1888_client_init(){
+void content_valid_clear(void) {
+	int i;
+	for (i = 0; i < POINT_COUNT; ++i) {
+		m_buffer[i].content_valid = 0;
+	}
+}
+
+void ieee1888_client_init(const char* country_str, const char* city_str, gateway_packet_t *gw_pkt){
+
+	int i, idx = 0;
+	char site_id_str[255], tmp[255] = {0};
+	const char *site_attr[] = {"mode", "fw_version", "pressure" , "temperature", "humidity",
+			"liminosity", "voltage", "current", "latitude", "longitude",
+			"altitudegps" ,"altitudebar", NULL };
+	const char *panel_attr[] = {"fw_version", "voltage" , "current", "power",
+				"energy", "charge", "timebase", "temperature", "humidity",
+				"pressure" ,"rain_detected", "rain_lvl", "battery_lvl", "err_code", NULL };
+	char* endpoint = "sclora.emone.com";
+	char country[4] = "th";
+	char city[8] = "bkk";
+
+	/* Get current unix time */
+	char* str_time=ieee1888_mk_time(time(NULL));
+
+	content_valid_clear();
+	//TODO: Parse country city network_id and dev_id variable
+
+	if (country_str != NULL) {
+		sprintf(country , "%s", country_str);
+	}
+
+	if (city_str != NULL) {
+		sprintf(city, "%s", city_str);
+	}
+
+	idx += sprintf(&site_id_str[idx],"%s/%s/%s/%08X/", endpoint, country, city, gw_pkt->NETWORK_ID); //sclora.emone.com/th/bkk/network_id
+
+	//Site properties
+	for (i = 0; i < (int) sizeof(site_attr); ++i) {
+		strncpy(tmp, site_id_str, sizeof tmp);
+		if(strcmp(site_attr[i], "mode") == 0) {
+			sprintf(m_buffer[i].content, "%d", gw_pkt->MODE);
+		} else if (strcmp(site_attr[i], "fw_verison") == 0){
+			sprintf(m_buffer[i].content, "%x", gw_pkt->site.fw_version);
+		} else if (strcmp(site_attr[i], "pressure") == 0){
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.pressure);
+		} else if (strcmp(site_attr[i], "temperature") == 0) {
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.temperature);
+		} else if (strcmp(site_attr[i], "humidity") == 0) {
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.humidity);
+		} else if (strcmp(site_attr[i], "liminosity") == 0) {
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.luminosity);
+		} else if (strcmp(site_attr[i], "voltage") == 0) {
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.voltage);
+		} else if (strcmp(site_attr[i], "current") == 0) {
+			sprintf(m_buffer[i].content, "%f", gw_pkt->site.current);
+		} else if (strcmp(site_attr[i], "latitude") == 0) {
+			sprintf(m_buffer[i].content, "%d", gw_pkt->site.latitude);
+		} else if (strcmp(site_attr[i], "longitude") == 0) {
+			sprintf(m_buffer[i].content, "%d", gw_pkt->site.longitude);
+		} else if (strcmp(site_attr[i], "altitudegps") == 0) {
+			sprintf(m_buffer[i].content, "%d", gw_pkt->site.altitudeGps);
+		} else if (strcmp(site_attr[i], "altitudebar") == 0) {
+			sprintf(m_buffer[i].content, "%d", gw_pkt->site.altitudeBar);
+		} else {
+			//TODO: error handler
+		}
+
+		strcpy(m_buffer[i].point_id, strcat(tmp, site_attr[i]));
+		strcpy(m_buffer[i].time, str_time);
+	}
+
+	//Panel properties 	//Device address
+	sprintf(&site_id_str[idx],"panel/%08X/", gw_pkt->DEVICE_ADDRESS); //sclora.emone.com/th/bkk/network_id/panel/dev_id
+	idx = i;
+	for (i = 0; i < (int) sizeof(panel_attr); ++i) {
+		strncpy(tmp, site_id_str, sizeof tmp);
+
+		if (strcmp(panel_attr[i], "fw_version") == 0) {
+			sprintf(m_buffer[idx + i].content, "%x", gw_pkt->panel.fw_version);
+		} else if (strcmp(panel_attr[i], "voltage") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.voltage);
+		} else if (strcmp(panel_attr[i], "current") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.current);
+		} else if (strcmp(panel_attr[i], "power") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.power);
+		} else if (strcmp(panel_attr[i], "energy") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.energy);
+		} else if (strcmp(panel_attr[i], "charge") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.charge);
+		} else if (strcmp(panel_attr[i], "timebase") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.timebase);
+		} else if (strcmp(panel_attr[i], "temperature") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.temperature);
+		} else if (strcmp(panel_attr[i], "humidity") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.humidity);
+		} else if (strcmp(panel_attr[i], "pressure") == 0) {
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.pressure);
+		} else if (strcmp(panel_attr[i], "rain_detected") == 0) {
+			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.rain_detected);
+		} else if (strcmp(panel_attr[i], "rain_lvl") == 0) {
+			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.rain_lvl);
+		} else if (strcmp(panel_attr[i], "battery_lvl") == 0) {
+			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.battery_lvl);
+		} else if (strcmp(panel_attr[i], "err_code") == 0) {
+			sprintf(m_buffer[idx + i].content, "%08X", gw_pkt->ErrorCode);
+		} else {
+			//TODO: error handler
+		}
+		strcpy(m_buffer[idx + i].point_id, strcat(tmp, panel_attr[i]));
+		strcpy(m_buffer[idx + i].time, str_time);
+	}
+
+#if 0
   strcpy(m_buffer[0].point_id,"http://gutp.jp/Arduino/test-001/Temperature");
   strcpy(m_buffer[1].point_id,"http://gutp.jp/Arduino/test-001/Illuminance");
   strcpy(m_buffer[2].point_id,"http://gutp.jp/Arduino/test-001/DIPSW");
   strcpy(m_buffer[3].point_id,"http://gutp.jp/Arduino/test-001/TGLSW");
-  m_buffer[0].content_valid=0;
-  m_buffer[1].content_valid=0;
-  m_buffer[2].content_valid=0;
-  m_buffer[3].content_valid=0;
+#endif
+
 }
 
-
+/*
 int ieee1888_client_fetch_from_server(){
 
   ieee1888_transport* rq_transport=ieee1888_mk_transport();
@@ -145,13 +256,14 @@ int ieee1888_client_fetch_from_server(){
 
   return IEEE1888_FETCH_SUCCESS;
 }
+*/
 
-
-int ieee1888_client_write_to_server(){
+int ieee1888_client_write_to_server(gateway_packet_t *gw_pkt){
 
    ieee1888_transport* rq_transport=ieee1888_mk_transport();
    ieee1888_body* rq_body=ieee1888_mk_body();
    ieee1888_point* rq_point=ieee1888_mk_point_array(POINT_COUNT);
+   ieee1888_value* rq_value;
 
    int i,n;
    for(i=0,n=0;i<POINT_COUNT;i++){
