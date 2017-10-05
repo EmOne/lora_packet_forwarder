@@ -1015,9 +1015,9 @@ int main(void)
     int x;
 
     /* configuration file related */
-    char *global_cfg_path= "global_conf.json"; /* contain global (typ. network-wide) configuration */
-    char *local_cfg_path = "local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
-    char *debug_cfg_path = "debug_conf.json"; /* if present, all other configuration files are ignored */
+    char *global_cfg_path= "/etc/loragw/global_conf.json"; /* contain global (typ. network-wide) configuration */
+    char *local_cfg_path = "/etc/loragw/local_conf.json"; /* contain node specific configuration, overwrite global parameters for parameters that are defined in both */
+    char *debug_cfg_path = "/etc/loragw/debug_conf.json"; /* if present, all other configuration files are ignored */
 
     /* threads */
     pthread_t thrid_up;
