@@ -73,7 +73,7 @@ typedef struct {
 } site_t;
 
 typedef struct {
-  uint32_t	NETWORK_ID;
+  uint64_t	NETWORK_ID;
   uint32_t	DEVICE_ADDRESS;
   uint8_t MODE; /* 0:Normal otherwise Diagnostic (1-32)*/
   site_t site;
