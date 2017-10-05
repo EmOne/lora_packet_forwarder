@@ -53,8 +53,11 @@ struct point_value {
 
 struct point_value m_buffer[POINT_COUNT];
 
-char m_IEEE1888_FROM[]="http://fiap-sandbox.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
-char m_IEEE1888_TO[]="http://fiap-dev.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
+//char m_IEEE1888_FROM[]="http://fiap-sandbox.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
+//char m_IEEE1888_TO[]="http://fiap-dev.gutp.ic.i.u-tokyo.ac.jp/axis2/services/FIAPStorage";
+
+char m_IEEE1888_FROM[]="https://sclora.herokuapp.com/axis2/services/FIAPStorage";
+char m_IEEE1888_TO[]="https://sclora.herokuapp.com/axis2/services/FIAPStorage";
 
 void content_valid_clear(void) {
 	int i;
@@ -63,17 +66,24 @@ void content_valid_clear(void) {
 	}
 }
 
+void content_valid_set(void) {
+	int i;
+	for (i = 0; i < POINT_COUNT; ++i) {
+		m_buffer[i].content_valid = 1;
+	}
+}
+
 void ieee1888_client_init(const char* country_str, const char* city_str, gateway_packet_t *gw_pkt){
 
 	int i, idx = 0;
-	char site_id_str[255], tmp[255] = {0};
-	const char *site_attr[] = {"mode", "fw_version", "pressure" , "temperature", "humidity",
-			"liminosity", "voltage", "current", "latitude", "longitude",
-			"altitudegps" ,"altitudebar", NULL };
-	const char *panel_attr[] = {"fw_version", "voltage" , "current", "power",
-				"energy", "charge", "timebase", "temperature", "humidity",
-				"pressure" ,"rain_detected", "rain_lvl", "battery_lvl", "err_code", NULL };
-	char* endpoint = "sclora.emone.com";
+	char site_id_str[255] = { 0 }, tmp[255] = {0};
+	const char *site_attr[12] = {"mode", "fw_version", "pressure" , \
+			"temperature", "humidity", "liminosity", "voltage", "current", \
+			"latitude", "longitude", "altitudegps" ,"altitudebar" };
+	const char *panel_attr[14] = {"fw_version", "voltage" , "current", "power", \
+				"energy", "charge", "timebase", "temperature", "humidity", \
+				"pressure" ,"rain_detected", "rain_lvl", "battery_lvl", "err_code" };
+	char* endpoint = "sclora.emone.co.th";
 	char country[4] = "th";
 	char city[8] = "bkk";
 
@@ -91,10 +101,10 @@ void ieee1888_client_init(const char* country_str, const char* city_str, gateway
 		sprintf(city, "%s", city_str);
 	}
 
-	idx += sprintf(&site_id_str[idx],"%s/%s/%s/%08X/", endpoint, country, city, gw_pkt->NETWORK_ID); //sclora.emone.com/th/bkk/network_id
+	idx += sprintf(&site_id_str[idx],"%s/%s/%s/%16llX/", endpoint, country, city, gw_pkt->NETWORK_ID); //sclora.emone.com/th/bkk/network_id
 
 	//Site properties
-	for (i = 0; i < (int) sizeof(site_attr); ++i) {
+	for (i = 0; i < 12; ++i) {
 		strncpy(tmp, site_id_str, sizeof tmp);
 		if(strcmp(site_attr[i], "mode") == 0) {
 			sprintf(m_buffer[i].content, "%d", gw_pkt->MODE);
@@ -131,7 +141,7 @@ void ieee1888_client_init(const char* country_str, const char* city_str, gateway
 	//Panel properties 	//Device address
 	sprintf(&site_id_str[idx],"panel/%08X/", gw_pkt->DEVICE_ADDRESS); //sclora.emone.com/th/bkk/network_id/panel/dev_id
 	idx = i;
-	for (i = 0; i < (int) sizeof(panel_attr); ++i) {
+	for (i = 0; i < 14; ++i) {
 		strncpy(tmp, site_id_str, sizeof tmp);
 
 		if (strcmp(panel_attr[i], "fw_version") == 0) {
@@ -157,7 +167,7 @@ void ieee1888_client_init(const char* country_str, const char* city_str, gateway
 		} else if (strcmp(panel_attr[i], "rain_detected") == 0) {
 			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.rain_detected);
 		} else if (strcmp(panel_attr[i], "rain_lvl") == 0) {
-			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.rain_lvl);
+			sprintf(m_buffer[idx + i].content, "%f", gw_pkt->panel.rain_lvl);
 		} else if (strcmp(panel_attr[i], "battery_lvl") == 0) {
 			sprintf(m_buffer[idx + i].content, "%d", gw_pkt->panel.battery_lvl);
 		} else if (strcmp(panel_attr[i], "err_code") == 0) {
@@ -175,7 +185,7 @@ void ieee1888_client_init(const char* country_str, const char* city_str, gateway
   strcpy(m_buffer[2].point_id,"http://gutp.jp/Arduino/test-001/DIPSW");
   strcpy(m_buffer[3].point_id,"http://gutp.jp/Arduino/test-001/TGLSW");
 #endif
-
+  content_valid_set();
 }
 
 /*
@@ -258,12 +268,11 @@ int ieee1888_client_fetch_from_server(){
 }
 */
 
-int ieee1888_client_write_to_server(gateway_packet_t *gw_pkt){
+int ieee1888_client_write_to_server(void){
 
    ieee1888_transport* rq_transport=ieee1888_mk_transport();
    ieee1888_body* rq_body=ieee1888_mk_body();
    ieee1888_point* rq_point=ieee1888_mk_point_array(POINT_COUNT);
-   ieee1888_value* rq_value;
 
    int i,n;
    for(i=0,n=0;i<POINT_COUNT;i++){
@@ -283,7 +292,7 @@ int ieee1888_client_write_to_server(gateway_packet_t *gw_pkt){
    rq_transport->body=rq_body;
 
    // for Debug
-   // ieee1888_dump_objects((ieee1888_object*)rq_transport);
+   ieee1888_dump_objects((ieee1888_object*)rq_transport);
 
    int err;
    ieee1888_transport* rs_transport=ieee1888_client_data(rq_transport,m_IEEE1888_TO,0,&err);

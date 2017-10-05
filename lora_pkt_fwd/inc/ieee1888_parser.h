@@ -78,12 +78,12 @@ typedef struct {
   uint8_t MODE; /* 0:Normal otherwise Diagnostic (1-32)*/
   site_t site;
   panel_t panel;
-  uint16_t ErrorCode;
+  uint32_t ErrorCode;
   /** may be added more*/
 } gateway_packet_t;
 
 void ieee1888_client_init(const char* country_str, const char* city_str, gateway_packet_t *gw_pkt);
 //int ieee1888_client_fetch_from_server(void);
-int ieee1888_client_write_to_server(gateway_packet_t *gw_pkt);
+int ieee1888_client_write_to_server(void);
 
 #endif /* _IEEE1888_CLIENT_H_ */

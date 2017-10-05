@@ -1474,6 +1474,54 @@ int main(void)
     exit(EXIT_SUCCESS);
 }
 
+void packet_parse(gateway_packet_t* gw_pkt, struct lgw_pkt_rx_s* p) {
+	uint8_t buff[256];
+
+	if (p->status == STAT_CRC_OK) {
+		memcpy((uint8_t*) buff, (uint8_t*) p->payload, p->size);
+		/* Get mote information from current packet (addr, fcnt) */
+		/* FHDR - DevAddr */
+		gw_pkt->DEVICE_ADDRESS = p->payload[1];
+		gw_pkt->DEVICE_ADDRESS |= p->payload[2] << 8;
+		gw_pkt->DEVICE_ADDRESS |= p->payload[3] << 16;
+		gw_pkt->DEVICE_ADDRESS |= p->payload[4] << 24;
+		/* FHDR - FCnt */
+//		mote_fcnt = p->payload[6];
+//		mote_fcnt |= p->payload[7] << 8;
+		gw_pkt->MODE = 0;
+		//TODO: panel + site err code
+		gw_pkt->ErrorCode = 0xFFFFFFFF;
+
+		gw_pkt->site.fw_version = 1;
+		gw_pkt->site.voltage = 5;
+		gw_pkt->site.current = 1;
+		gw_pkt->site.temperature = 1;
+		gw_pkt->site.humidity = 1;
+		gw_pkt->site.pressure = 1;
+		gw_pkt->site.luminosity = 1;
+		gw_pkt->site.latitude = 1;
+		gw_pkt->site.longitude = 1;
+		gw_pkt->site.altitudeBar = 1;
+		gw_pkt->site.altitudeGps = 1;
+
+		gw_pkt->panel.fw_version = 99;
+		gw_pkt->panel.voltage = 99;
+		gw_pkt->panel.current = 99;
+		gw_pkt->panel.power = 99;
+		gw_pkt->panel.energy = 99;
+		gw_pkt->panel.charge = 99;
+		gw_pkt->panel.timebase = 99;
+		gw_pkt->panel.temperature = 99;
+		gw_pkt->panel.humidity = 99;
+		gw_pkt->panel.pressure = 99;
+		gw_pkt->panel.rain_detected = 99;
+		gw_pkt->panel.rain_lvl = 99;
+		gw_pkt->panel.battery_lvl = 99;
+		gw_pkt->panel.luminosity = 99;
+
+	}
+}
+
 /* -------------------------------------------------------------------------- */
 /* --- THREAD 1: RECEIVING PACKETS AND FORWARDING THEM ---------------------- */
 
@@ -1824,6 +1872,14 @@ void thread_up(void) {
             /* Packet base64-encoded payload, 14-350 useful chars */
             memcpy((void *)(buff_up + buff_index), (void *)",\"data\":\"", 9);
             buff_index += 9;
+
+            //Forward packet IEEE1888
+            if(fwd_ieee1888_pkt) {
+				packet_parse(&gw_pkt, p);
+				ieee1888_client_init(country_str, city_str, &gw_pkt);
+				ieee1888_client_write_to_server();
+            }
+
             j = bin_to_b64(p->payload, p->size, (char *)(buff_up + buff_index), 341); /* 255 bytes = 340 chars in b64 + null char */
             if (j>=0) {
                 buff_index += j;
