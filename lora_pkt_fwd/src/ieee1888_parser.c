@@ -139,7 +139,7 @@ void ieee1888_client_init(const char* country_str, const char* city_str, gateway
 	}
 
 	//Panel properties 	//Device address
-	sprintf(&site_id_str[idx],"panel/%08X/", gw_pkt->DEVICE_ADDRESS); //sclora.emone.com/th/bkk/network_id/panel/dev_id
+	sprintf(&site_id_str[idx],"panel/%08X/mems/", gw_pkt->DEVICE_ADDRESS); //sclora.emone.com/th/bkk/network_id/panel/dev_id
 	idx = i;
 	for (i = 0; i < 14; ++i) {
 		strncpy(tmp, site_id_str, sizeof tmp);

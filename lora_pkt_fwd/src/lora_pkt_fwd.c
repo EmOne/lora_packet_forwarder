@@ -112,7 +112,7 @@ Maintainer: Michael Coracin
 #define UNIX_GPS_EPOCH_OFFSET 315964800 /* Number of seconds ellapsed between 01.Jan.1970 00:00:00
                                                                           and 06.Jan.1980 00:00:00 */
 
-#define DEFAULT_BEACON_FREQ_HZ      923400000
+#define DEFAULT_BEACON_FREQ_HZ      924800000
 #define DEFAULT_BEACON_FREQ_NB      1
 #define DEFAULT_BEACON_FREQ_STEP    0
 #define DEFAULT_BEACON_DATARATE     9	//AS923: DR3 SF9/125kHz
@@ -1475,7 +1475,8 @@ int main(void)
 }
 
 void packet_parse(gateway_packet_t* gw_pkt, struct lgw_pkt_rx_s* p) {
-	uint8_t buff[256];
+	uint8_t buff[256] = { 0 };
+	sensor_t sensor = { 0 };
 
 	if (p->status == STAT_CRC_OK) {
 		memcpy((uint8_t*) buff, (uint8_t*) p->payload, p->size);
@@ -1488,6 +1489,8 @@ void packet_parse(gateway_packet_t* gw_pkt, struct lgw_pkt_rx_s* p) {
 		/* FHDR - FCnt */
 //		mote_fcnt = p->payload[6];
 //		mote_fcnt |= p->payload[7] << 8;
+		memcpy((uint8_t*) &sensor, (uint8_t*) &buff + 12, sizeof (sensor_t));
+
 		gw_pkt->MODE = 0;
 		//TODO: panel + site err code
 		gw_pkt->ErrorCode = 0xFFFFFFFF;
