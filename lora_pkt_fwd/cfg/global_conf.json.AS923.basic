@@ -2,12 +2,12 @@
     "SX1301_conf": {
         "lorawan_public": true,
         "clksrc": 1, /* radio_1 provides clock to concentrator */
-        "antenna_gain": 0, /* antenna gain, in dBi */
+        "antenna_gain": 2, /* antenna gain, in dBi */
         "radio_0": {
             "enable": true,
             "type": "SX1257",
-            "freq": 923600000,
-            "rssi_offset": -166.0,
+            "freq": 923400000,
+            "rssi_offset": -169.0,
             "tx_enable": true,
             "tx_freq_min": 920000000,
             "tx_freq_max": 925000000
@@ -15,8 +15,8 @@
         "radio_1": {
             "enable": true,
             "type": "SX1257",
-            "freq": 924600000,
-            "rssi_offset": -166.0,
+            "freq": 924400000,
+            "rssi_offset": -169.0,
             "tx_enable": false,
             "rx_freq_min": 920000000,
             "rx_freq_max": 925000000
@@ -25,63 +25,63 @@
             /* Lora MAC channel, 125kHz, all SF, 923.2 MHz */
             "enable": true,
             "radio": 0,
-            "if": -400000
+            "if": -200000
         },
         "chan_multiSF_1": {
             /* Lora MAC channel, 125kHz, all SF, 923.4 MHz */
             "enable": true,
             "radio": 0,
-            "if": -200000
+            "if": 0
         },
         "chan_multiSF_2": {
             /* Lora MAC channel, 125kHz, all SF, 923.6 MHz */
             "enable": true,
             "radio": 0,
-            "if": 0
+            "if": 200000
         },
         "chan_multiSF_3": {
             /* Lora MAC channel, 125kHz, all SF, 923.8 MHz */
             "enable": true,
             "radio": 0,
-            "if": 200000
+            "if": 400000
         },
         "chan_multiSF_4": {
             /* Lora MAC channel, 125kHz, all SF, 924.0 MHz */
             "enable": true,
             "radio": 1,
-            "if": -400000
+            "if": -200000
         },
         "chan_multiSF_5": {
             /* Lora MAC channel, 125kHz, all SF, 924.2 MHz */
             "enable": true,
             "radio": 1,
-            "if": -200000
+            "if": 0
         },
         "chan_multiSF_6": {
             /* Lora MAC channel, 125kHz, all SF, 924.6 MHz */
             "enable": true,
             "radio": 1,
-            "if": 0
+            "if": 200000
         },
         "chan_multiSF_7": {
             /* Lora MAC channel, 125kHz, all SF, 924.8 MHz */
             "enable": true,
             "radio": 1,
-            "if": 200000
+            "if": 400000
         },
         "chan_Lora_std": {
             /* Lora MAC channel, 250kHz, SF9, 923.2 MHz */
             "enable": true,
             "radio": 0,
-            "if": -400000,
+            "if": -200000,
             "bandwidth": 125000,
             "spread_factor": 10
         },
         "chan_FSK": {
-            /* FSK 100kbps channel, 923.4 MHz */
+            /* FSK 100kbps channel, 924.4 MHz */
             "enable": false,
-            "radio": 0,
-            "if": 100000,
+            "radio": 1,
+            "if": 0,
             "bandwidth": 250000,
             "datarate": 100000
         },
@@ -108,7 +108,7 @@
         },
         "tx_lut_3": {
             /* TX gain table, index 3 */
-            "pa_gain": 1,
+            "pa_gain": 0,
             "mix_gain": 15,
             "rf_power": 3,
             "dig_gain": 0
