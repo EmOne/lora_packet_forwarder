@@ -922,6 +922,7 @@ static double difftimespec(struct timespec end, struct timespec beginning) {
 static int send_tx_ack(uint8_t token_h, uint8_t token_l, enum jit_error_e error) {
     uint8_t buff_ack[64]; /* buffer to give feedback to server */
     int buff_index;
+    int ret;
 
     /* reset buffer */
     memset(&buff_ack, 0, sizeof buff_ack);
@@ -1002,7 +1003,12 @@ static int send_tx_ack(uint8_t token_h, uint8_t token_l, enum jit_error_e error)
     buff_ack[buff_index] = 0; /* add string terminator, for safety */
 
     /* send datagram to server */
-    return send(sock_down, (void *)buff_ack, buff_index, 0);
+    ret = send(sock_down, (void *)buff_ack, buff_index, 0);
+    if(ret == -1) {
+	printf("\nJSON down: send ack fail %d", errno);
+	 exit(EXIT_FAILURE);
+    }
+    return ret;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1941,7 +1947,10 @@ void thread_up(void) {
         printf("\nJSON up: %s\n", (char *)(buff_up + 12)); /* DEBUG: display JSON payload */
 
         /* send datagram to server */
-        send(sock_up, (void *)buff_up, buff_index, 0);
+        if(send(sock_up, (void *)buff_up, buff_index, 0) == -1) {
+		printf("\nJSON up: send fail %d", errno);
+		exit(EXIT_FAILURE);
+	}
         clock_gettime(CLOCK_MONOTONIC, &send_time);
         pthread_mutex_lock(&mx_meas_up);
         meas_up_dgram_sent += 1;
@@ -2165,7 +2174,10 @@ void thread_down(void) {
         buff_req[2] = token_l;
 
         /* send PULL request and record time */
-        send(sock_down, (void *)buff_req, sizeof buff_req, 0);
+        if(send(sock_down, (void *)buff_req, sizeof buff_req, 0) == -1) {
+		printf("\nJSON down: send pull req fail %d", errno);
+		 exit(EXIT_FAILURE);
+	}
         clock_gettime(CLOCK_MONOTONIC, &send_time);
         pthread_mutex_lock(&mx_meas_dw);
         meas_dw_pull_sent += 1;
