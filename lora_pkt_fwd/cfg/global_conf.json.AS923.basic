@@ -89,35 +89,35 @@
             /* TX gain table, index 0 */
             "pa_gain": 0,
             "mix_gain": 8,
-            "rf_power": -5,
+            "rf_power": 0,
             "dig_gain": 0
         },
         "tx_lut_1": {
             /* TX gain table, index 1 */
             "pa_gain": 0,
             "mix_gain": 9,
-            "rf_power": -3,
+            "rf_power": 2,
             "dig_gain": 0
         },
         "tx_lut_2": {
             /* TX gain table, index 2 */
             "pa_gain": 0,
             "mix_gain": 11,
-            "rf_power": 0,
+            "rf_power": 4,
             "dig_gain": 0
         },
         "tx_lut_3": {
             /* TX gain table, index 3 */
             "pa_gain": 0,
             "mix_gain": 15,
-            "rf_power": 3,
+            "rf_power": 6,
             "dig_gain": 0
         },
         "tx_lut_4": {
             /* TX gain table, index 4 */
             "pa_gain": 1,
             "mix_gain": 9,
-            "rf_power": 6,
+            "rf_power": 8,
             "dig_gain": 0
         },
         "tx_lut_5": {
@@ -205,7 +205,7 @@
         "country": "th",
         "city": "bkk",
         "contact_email": "mail@example.com",
-        "description": "SCLORA GATEWAY xxx",
+        "description": "LORAWAN GATEWAY xxx",
         //"server_address": "as.iot.semtech.cloud",
         "server_address": "router.as2.thethings.network",
         "serv_port_up": 1700,
